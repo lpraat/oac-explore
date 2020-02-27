@@ -109,6 +109,7 @@ def experiment(variant, prev_exp_state=None):
 
         replay_buffer=replay_buffer,
         optimistic_exp_hp=variant['optimistic_exp'],
+        log_dir=variant['log_dir'],
         **variant['algorithm_kwargs']
     )
 

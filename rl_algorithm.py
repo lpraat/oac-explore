@@ -16,6 +16,7 @@ import ray
 import torch
 import numpy as np
 import random
+import os
 
 
 class BatchRLAlgorithm(metaclass=abc.ABCMeta):
@@ -34,6 +35,7 @@ class BatchRLAlgorithm(metaclass=abc.ABCMeta):
             num_train_loops_per_epoch=1,
             min_num_steps_before_training=0,
             optimistic_exp_hp=None,
+            log_dir=None
     ):
         super().__init__()
 
@@ -50,6 +52,7 @@ class BatchRLAlgorithm(metaclass=abc.ABCMeta):
         self.min_num_steps_before_training = min_num_steps_before_training
         self.optimistic_exp_hp = optimistic_exp_hp
 
+        self.fixed_log_dir = os.path.join(log_dir, 'progress_fixed.csv')
         """
         The class mutable state
         """
@@ -209,6 +212,9 @@ class BatchRLAlgorithm(metaclass=abc.ABCMeta):
             prefix='exploration/'
         )
         expl_paths = self.expl_data_collector.get_epoch_paths()
+
+        average_return_expl = np.mean([sum(path["rewards"]) for path in expl_paths])
+
         logger.record_dict(
             eval_util.get_generic_path_information(expl_paths),
             prefix="exploration/",
@@ -222,10 +228,19 @@ class BatchRLAlgorithm(metaclass=abc.ABCMeta):
         )
         remote_eval_paths = ray.get(
             self.remote_eval_data_collector.get_epoch_paths.remote())
+
+        average_return_eval = np.mean([sum(path["rewards"]) for path in remote_eval_paths])
+
         logger.record_dict(
             eval_util.get_generic_path_information(remote_eval_paths),
             prefix="remote_evaluation/",
         )
+
+        with open(self.fixed_log_dir, 'a') as f:
+            if epoch == 0:
+                f.write("Epoch,AverageReturnExp,AverageReturnEval\n")
+
+            f.write(str(epoch) + "," + str(average_return_expl) + "," + str(average_return_eval) + "\n")
 
         """
         Misc
