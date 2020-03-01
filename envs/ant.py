@@ -5,6 +5,7 @@ from gym.envs.mujoco.ant_v3 import AntEnv
 class Ant(AntEnv):
 
     def __init__(self, get_reward=None, *args, **kwargs):
+        kwargs['exclude_current_positions_from_observation'] = False
         super().__init__(*args, **kwargs)
         if self._exclude_current_positions_from_observation == True:
             self.num_features = 27
@@ -32,7 +33,6 @@ class Ant(AntEnv):
 
     def _render(self, mode='human'):
         return self.render(mode)
-
 
 if __name__ == '__main__':
     get_reward = lambda o, r, d, i : r

@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 from gym.envs.mujoco.humanoid_v3 import HumanoidEnv
 
@@ -13,21 +14,8 @@ class Humanoid(HumanoidEnv):
         else:
             self.get_reward = get_reward
 
-        print("Adding non standup positions...")
-        self.init_states = []
-        while len(self.init_states) < 1000:
-            s = self.reset()
-            step = 0
-            for _ in range(5000):
-                s, r, d, i = self.step(self.action_space.sample())
-
-                s = self.state_vector()
-
-                if step > 100 and s[2] < 1.0:
-                    self.init_states.append([s[0:24], s[24:47]])
-                    break
-
-                step += 1
+        # print("Adding non standup positions...")
+        self.init_states = np.load(os.path.join(os.path.dirname(__file__), 'humanoid_mod_init_states.npy'),  allow_pickle=True)
 
     def _seed(self, seed=None):
         return self.seed(seed)

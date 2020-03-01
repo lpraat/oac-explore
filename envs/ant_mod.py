@@ -1,13 +1,14 @@
 import numpy as np
+import os
 
 from gym.envs.mujoco.ant_v3 import AntEnv
 
-class AntMod(AntEnv):
+class Ant(AntEnv):
     """
     Modified version of Ant where the Ant starts from an upside down position
     """
 
-    def __init__(self, get_reward, *args, **kwargs):
+    def __init__(self, get_reward=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.num_features = self.state_vector().shape[0]
 
@@ -16,21 +17,21 @@ class AntMod(AntEnv):
         else:
             self.get_reward = get_reward
 
-        print("Initializing modded Ant...")
-        self.init_states = []
-        while len(self.init_states) < 100:
-            s = self.reset()
-            step = 0
-            for _ in range(5000):
-                s, r, d, i = self.step(self.action_space.sample())
+        # print("Initializing modded Ant...")
+        self.init_states = np.load(os.path.join(os.path.dirname(__file__), 'ant_mod_init_states.npy'), allow_pickle=True)
+        # while len(self.init_states) < 100:
+        #     s = self.reset()
+        #     step = 0
+        #     for _ in range(5000):
+        #         s, r, d, i = self.step(self.action_space.sample())
 
-                s = self.state_vector()
+        #         s = self.state_vector()
 
-                if step > 100 and s[2] < 0.3:
-                    self.init_states.append([s[0:15], s[15:29]])
-                    break
+        #         if step > 100 and s[2] < 0.3:
+        #             self.init_states.append([s[0:15], s[15:29]])
+        #             break
 
-                step += 1
+        #         step += 1
 
     def _seed(self, seed=None):
         return self.seed(seed)
