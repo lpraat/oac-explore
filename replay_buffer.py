@@ -10,19 +10,12 @@ class ReplayBuffer(object):
     def __init__(
         self,
         max_replay_buffer_size,
-        ob_space,
-        action_space,
+        ob_dim,
+        ac_dim,
     ):
         """
         The class state which should not mutate
         """
-
-        self._ob_space = ob_space
-        self._action_space = action_space
-
-        ob_dim = get_dim(self._ob_space)
-        ac_dim = get_dim(self._action_space)
-
         self._max_replay_buffer_size = max_replay_buffer_size
 
         """
@@ -87,8 +80,6 @@ class ReplayBuffer(object):
 
     def add_sample(self, observation, action, reward, next_observation,
                    terminal, env_info, **kwargs):
-
-        assert not isinstance(self._action_space, Discrete)
 
         self._observations[self._top] = observation
         self._actions[self._top] = action

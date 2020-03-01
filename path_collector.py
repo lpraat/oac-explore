@@ -192,7 +192,7 @@ def rollout(
     terminals = []
     agent_infos = []
     env_infos = []
-    o = env.reset()
+    o = env._reset()
     agent.reset()
     next_o = None
     path_length = 0
@@ -206,7 +206,7 @@ def rollout(
             a, agent_info = get_optimistic_exploration_action(
                 o, **optimistic_exploration_kwargs)
 
-        next_o, r, d, env_info = env.step(a)
+        next_o, r, d, env_info = env._step(a)
         observations.append(o)
         rewards.append(r)
         terminals.append(d)

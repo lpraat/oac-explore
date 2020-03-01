@@ -23,8 +23,8 @@ ray.init(
     logging_level=logging.WARNING,
 
     # The amount of memory (in bytes)
-    object_store_memory=1073741824, # 1g
-    redis_max_memory=1073741824 # 1g
+    # object_store_memory=1073741824, # 1g
+    # redis_max_memory=1073741824 # 1g
 )
 
 
@@ -73,6 +73,16 @@ def experiment(variant, prev_exp_state=None):
     obs_dim = expl_env.observation_space.low.size
     action_dim = expl_env.action_space.low.size
 
+    obs_dim, action_dim = {
+        'GridGoal1': (2, 2),
+        'GridGoal2': (2, 2),
+        'GridGoal3': (2, 2),
+        'AntEscape': (29, 8),
+        'AntJump': (29, 8),
+        'AntNavigate': (29, 8),
+        'HumanoidUp': (47, 17)
+    }[domain]
+
     # Get producer function for policy and value functions
     M = variant['layer_size']
 
@@ -91,9 +101,10 @@ def experiment(variant, prev_exp_state=None):
     )
     replay_buffer = ReplayBuffer(
         variant['replay_buffer_size'],
-        ob_space=expl_env.observation_space,
-        action_space=expl_env.action_space
+        ob_dim=obs_dim,
+        ac_dim=action_dim
     )
+
     trainer = SACTrainer(
         policy_producer,
         q_producer,
@@ -151,9 +162,11 @@ def get_cmd_args():
     parser.add_argument('--delta', type=float, default=0.0)
 
     # Training param
-    parser.add_argument('--num_expl_steps_per_train_loop',
-                        type=int, default=1000)
-    parser.add_argument('--num_trains_per_train_loop', type=int, default=1000)
+    parser.add_argument('--num_epochs', type=int)
+    parser.add_argument('--max_path_length', type=int)
+    parser.add_argument('--num_expl_steps_per_train_loop',type=int)
+    parser.add_argument('--num_trains_per_train_loop', type=int)
+    parser.add_argument('--num_eval_steps_per_epoch', type=int)
 
     args = parser.parse_args()
 
@@ -222,9 +235,11 @@ if __name__ == "__main__":
     variant['seed'] = args.seed
     variant['domain'] = args.domain
 
-    variant['algorithm_kwargs']['num_epochs'] = domain_to_epoch(args.domain)
+    variant['algorithm_kwargs']['num_epochs'] = args.num_epochs
     variant['algorithm_kwargs']['num_trains_per_train_loop'] = args.num_trains_per_train_loop
     variant['algorithm_kwargs']['num_expl_steps_per_train_loop'] = args.num_expl_steps_per_train_loop
+    variant['algorithm_kwargs']['num_eval_steps_per_epoch'] = args.num_eval_steps_per_epoch
+    variant['algorithm_kwargs']['max_path_length'] = args.max_path_length
 
     variant['optimistic_exp']['should_use'] = args.beta_UB > 0 or args.delta > 0
     variant['optimistic_exp']['beta_UB'] = args.beta_UB

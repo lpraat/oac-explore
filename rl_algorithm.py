@@ -150,14 +150,14 @@ class BatchRLAlgorithm(metaclass=abc.ABCMeta):
         self.replay_buffer.end_epoch(epoch)
         self.trainer.end_epoch(epoch)
 
-        # We can only save the state of the program
-        # after we call end epoch on all objects with internal state.
-        # This is so that restoring from the saved state will
-        # lead to identical result as if the program was left running.
-        if epoch > 0:
-            snapshot = self._get_snapshot(epoch)
-            logger.save_itr_params(epoch, snapshot)
-            gt.stamp('saving')
+        # # We can only save the state of the program
+        # # after we call end epoch on all objects with internal state.
+        # # This is so that restoring from the saved state will
+        # # lead to identical result as if the program was left running.
+        # if epoch > 0:
+        #     snapshot = self._get_snapshot(epoch)
+        #     logger.save_itr_params(epoch, snapshot)
+        #     gt.stamp('saving')
 
         logger.record_dict(_get_epoch_timings())
         logger.record_tabular('Epoch', epoch)
@@ -191,50 +191,50 @@ class BatchRLAlgorithm(metaclass=abc.ABCMeta):
     def _log_stats(self, epoch):
         logger.log("Epoch {} finished".format(epoch), with_timestamp=True)
 
-        """
-        Replay Buffer
-        """
-        logger.record_dict(
-            self.replay_buffer.get_diagnostics(),
-            prefix='replay_buffer/'
-        )
+        # """
+        # Replay Buffer
+        # """
+        # logger.record_dict(
+        #     self.replay_buffer.get_diagnostics(),
+        #     prefix='replay_buffer/'
+        # )
 
-        """
-        Trainer
-        """
-        logger.record_dict(self.trainer.get_diagnostics(), prefix='trainer/')
+        # """
+        # Trainer
+        # """
+        # logger.record_dict(self.trainer.get_diagnostics(), prefix='trainer/')
 
-        """
-        Exploration
-        """
-        logger.record_dict(
-            self.expl_data_collector.get_diagnostics(),
-            prefix='exploration/'
-        )
+        # """
+        # Exploration
+        # """
+        # logger.record_dict(
+        #     self.expl_data_collector.get_diagnostics(),
+        #     prefix='exploration/'
+        # )
         expl_paths = self.expl_data_collector.get_epoch_paths()
 
         average_return_expl = np.mean([sum(path["rewards"]) for path in expl_paths])
 
-        logger.record_dict(
-            eval_util.get_generic_path_information(expl_paths),
-            prefix="exploration/",
-        )
-        """
-        Remote Evaluation
-        """
-        logger.record_dict(
-            ray.get(self.remote_eval_data_collector.get_diagnostics.remote()),
-            prefix='remote_evaluation/',
-        )
+        # logger.record_dict(
+        #     eval_util.get_generic_path_information(expl_paths),
+        #     prefix="exploration/",
+        # )
+        # """
+        # Remote Evaluation
+        # """
+        # logger.record_dict(
+        #     ray.get(self.remote_eval_data_collector.get_diagnostics.remote()),
+        #     prefix='remote_evaluation/',
+        # )
         remote_eval_paths = ray.get(
             self.remote_eval_data_collector.get_epoch_paths.remote())
 
         average_return_eval = np.mean([sum(path["rewards"]) for path in remote_eval_paths])
 
-        logger.record_dict(
-            eval_util.get_generic_path_information(remote_eval_paths),
-            prefix="remote_evaluation/",
-        )
+        # logger.record_dict(
+        #     eval_util.get_generic_path_information(remote_eval_paths),
+        #     prefix="remote_evaluation/",
+        # )
 
         with open(self.fixed_log_dir, 'a') as f:
             if epoch == 0:

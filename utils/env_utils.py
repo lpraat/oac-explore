@@ -126,36 +126,121 @@ class NormalizedBoxEnv(ProxyEnv):
 
 def domain_to_env(name):
 
-    from gym.envs.mujoco import HalfCheetahEnv, \
-        InvertedPendulumEnv, HumanoidEnv, \
-        HopperEnv, AntEnv, Walker2dEnv
+    # from gym.envs.mujoco import HalfCheetahEnv, \
+    #     InvertedPendulumEnv, HumanoidEnv, \
+    #     HopperEnv, AntEnv, Walker2dEnv
+
+    from envs.ant import Ant
+    from envs.ant_mod import Ant as AntMod
+    from envs.grid_world import GridWorldContinuous
+    from envs.humanoid import Humanoid
 
     return {
-        'invertedpendulum': InvertedPendulumEnv,
-        'humanoid': HumanoidEnv,
-        'halfcheetah': HalfCheetahEnv,
-        'hopper': HopperEnv,
-        'ant': AntEnv,
-        'walker2d': Walker2dEnv
+        # 'invertedpendulum': InvertedPendulumEnv,
+        # 'humanoid': HumanoidEnv,
+        # 'halfcheetah': HalfCheetahEnv,
+        # 'hopper': HopperEnv,
+        # 'ant': AntEnv,
+        # 'walker2d': Walker2dEnv
+
+        'AntEscape': AntMod,
+        'AntJump': Ant,
+        'AntNavigate': Ant,
+        'HumanoidUp': Humanoid,
+
+        'GridGoal1': GridWorldContinuous,
+        'GridGoal2': GridWorldContinuous,
+        'GridGoal3': GridWorldContinuous,
     }[name]
 
 
 def domain_to_epoch(name):
+    raise NotImplementedError("Use command line arg instead.")
+    # return {
+    #     # 'invertedpendulum': 300,
+    #     # 'humanoid': 9000,
+    #     # 'halfcheetah': 5000,
+    #     # 'hopper': 2000,
+    #     # 'ant': 5000,
+    #     # 'walker2d': 5000,
 
-    return {
-        'invertedpendulum': 300,
-        'humanoid': 9000,
-        'halfcheetah': 5000,
-        'hopper': 2000,
-        'ant': 5000,
-        'walker2d': 5000
-    }[name]
+    #     'AntEscape': 500,
+    #     'AntJump': 1000,
+    #     'AntNavigate': 1000,
+    #     'HumanoidUp': 2000,
+
+    #     'GridGoal1': 100,
+    #     'GridGoal2': 100,
+    #     'GridGoal3': 100,
+
+
+    # }[name]
 
 
 def env_producer(domain, seed):
 
-    env = domain_to_env(domain)()
+    sparse_reward_lambda = {
+        'GridGoal1': gridgoal1_sparse_reward,
+        'GridGoal2': gridgoal2_sparse_reward,
+        'GridGoal3': gridgoal3_sparse_reward,
+        'AntEscape': antescape_sparse_reward,
+        'AntJump': antjump_sparse_reward,
+        'AntNavigate': antnavigate_sparse_reward,
+        'HumanoidUp': humanoidup_sparse_reward
+    }[domain]
+
+    env = domain_to_env(domain)(get_reward=sparse_reward_lambda)
     env.seed(seed)
-    env = NormalizedBoxEnv(env)
+
+    # env = NormalizedBoxEnv(env)
 
     return env
+
+
+def gridgoal1_sparse_reward(s, r, d, i):
+    if np.linalg.norm(s - np.array([5, 5], dtype=np.float32)) <= 1e-1:
+        return 1, True
+    else:
+        return 0, False
+
+def gridgoal2_sparse_reward(s, r, d, i):
+    if np.linalg.norm(s - np.array([2, 5], dtype=np.float32)) <= 1e-1:
+        return 1, True
+    else:
+        return 0, False
+
+def gridgoal3_sparse_reward(s, r, d, i):
+    if np.linalg.norm(s - np.array([5, 2], dtype=np.float32)) <= 1e-1:
+        return 1, True
+    else:
+        return 0, False
+
+def antescape_sparse_reward(s, r, d, i):
+    _self = i['self']
+    l1 = _self.unwrapped.get_body_com('aux_1')[2]
+    l2 = _self.unwrapped.get_body_com('aux_2')[2]
+    l3 = _self.unwrapped.get_body_com('aux_3')[2]
+    l4 = _self.unwrapped.get_body_com('aux_4')[2]
+    thresh = 0.8
+    if l1 >= thresh and l2 >= thresh and l3 >= thresh and l4 >= thresh:
+        return 1, True
+    else:
+        return 0, False
+
+def antnavigate_sparse_reward(s, r, d, i):
+    if s[0] >= 7:
+        return 1, True
+    else:
+        return 0, False
+
+def antjump_sparse_reward(s, r, d, i):
+    if s[2] >= 3:
+        return 1, True
+    else:
+        return 0, False
+
+def humanoidup_sparse_reward(s, r, d, i):
+    if s[2] >= 1:
+        return 1, True
+    else:
+        return 0, False
