@@ -1,83 +1,60 @@
-# Optimistic Actor Critic
+# Goal-Based Reinforcement Learning
 
-This repository contains the code accompanying the NeurIPS 2019 paper 'Better Exploration with Optimistic Actor Critic'.
 
-If you are reading the code to understand how Optimistic Actor Critic works, have a look at the file ```optimistic_exploration.py```, which encapsulates the logic of optimistic exploration. The remaining files in the repository implement a generic version of Soft Actor Critic.
+## Reproducing the experiments
+In this directory you can find the code to reproduce the runs of SAC.
+The code base is taken from https://github.com/microsoft/oac-explore.
 
-# Reproducing Results
-
-The bash script ```reproduce.sh``` will run Soft Actor Critic and Optimistic Actor Critic on the environment ```Humanoid-v2```, each with 5 seeds. It is recommended you execute this script on a machine with sufficient resources.
-
-After the script finishes, to plot the learning curve, you can run
-
+### Requirements
+A python version > 3.6 is required.
+Required libraries, which are listed in requirements.txt file, can be installed by running
+```bash
+pip install -r environment/requirements.txt
 ```
-python -m plotting.plot_against_baseline
-```
+A Mujoco license is needed to run the Mujoco experiments.
 
-which should produce the graph below. Optimistic Actor Critic takes ~6 million timesteps to obtain an average episode return of 8000, while Soft Actor Critic requires 10 million steps. This represents a **~40%** improvement in sample efficiency.
-
-![oac_vs_sac](humanoid-v2_formal_fig_True.png)
-
-Note that the result in the paper was produced by modifying the Tensorflow code as provided in the [softlearning](https://github.com/rail-berkeley/softlearning) repo.
-
-# Running Experiments
-
-The repository supports automatic saving and restoring from checkpoint. This is useful if you run experiments on pre-emptive cloud compute.
-
-For software dependencies, please have a look inside the ```environment``` folder, you can either build the Dockerfile, create a conda environment with ```environment.yml``` or pip environment with ```environments.txt```.
-
-To create the conda environment, ```cd``` into the ```environment``` folder and run:
-
-```
-python install_mujoco.py
-conda env create -f environment.yml
+### Launch scripts
+Before launching the experiments set the PYTHONPATH environment variable:
+```bash
+export PYTHONPATH=$(pwd)
 ```
 
-To run Soft Actor Critic on Humanoid with seed ```0``` as a baseline to compare against Optimistic Actor Critic, run
+In the following scripts, we provide a default seed of 0.
 
-```
-python main.py --seed=0 --domain=humanoid
-```
-
-To run Optimistic Actor Critic on Humanoid with seed ```0```,
-
-```
-python main.py --seed=0 --domain=humanoid --beta_UB=4.66 --delta=23.53
+#### GridWorld (Goal 1)
+```bash
+python main.py --seed 0 --domain "GridGoal1" --num_epochs 100 --num_expl_steps_per_train_loop 12000 --num_eval_steps_per_epoch 12000 --num_trains_per_train_loop 12000 --max_path_length 1200
 ```
 
-# Hyper-parameter Selection
-
-Note that we are able to remove an hyperparameter relative to the code used for the paper (the k_LB hyper-parameter). The result in the graph above was obtained without using the hyper-parameter k_LB.
-
-# Acknowledgement
-
-This reposity was based on [rlkit](https://github.com/vitchyr/rlkit).
-
-# Citation
-
-If you use the codebase, please cite the paper:
-
-```
-@misc{oac,
-    title={Better Exploration with Optimistic Actor-Critic},
-    author={Kamil Ciosek and Quan Vuong and Robert Loftin and Katja Hofmann},
-    year={2019},
-    eprint={1910.12807},
-    archivePrefix={arXiv},
-    primaryClass={stat.ML}
-}
+#### GridWorld (Goal 2)
+```bash
+python main.py --seed 0 --domain "GridGoal2" --num_epochs 100 --num_expl_steps_per_train_loop 12000 --num_eval_steps_per_epoch 12000 --num_trains_per_train_loop 12000 --max_path_length 1200
 ```
 
-# Contributing
+#### GridWorld (Goal 3)
+```bash
+python main.py --seed 0 --domain "GridGoal3" --num_epochs 100 --num_expl_steps_per_train_loop 12000 --num_eval_steps_per_epoch 12000 --num_trains_per_train_loop 12000 --max_path_length 1200
+```
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+#### AntEscape
+```bash
+python main.py --seed 0 --domain "AntEscape" --num_epochs 500 --num_expl_steps_per_train_loop 5000 --num_eval_steps_per_epoch 5000 --num_trains_per_train_loop 5000 --max_path_length 500
+```
 
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+#### AntJump
+```bash
+python main.py --seed 0 --domain "AntJump" --num_epochs 1000 --num_expl_steps_per_train_loop 5000 --num_eval_steps_per_epoch 5000 --num_trains_per_train_loop 5000 --max_path_length 500
+```
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+#### AntNavigate
+```bash
+python main.py --seed 0 --domain "AntNavigate" --num_epochs 1000 --num_expl_steps_per_train_loop 5000 --num_eval_steps_per_epoch 5000 --num_trains_per_train_loop 5000 --max_path_length 500
+```
+
+#### HumanoidUp
+```bash
+python main.py --seed 0 --domain "HumanoidUp" --num_epochs 2000 --num_expl_steps_per_train_loop 6000 --num_eval_steps_per_epoch 6000 --num_trains_per_train_loop 6000 --max_path_length 2000 &
+```
+
+### Results visualization
+Statistics are logged under the data folder.
